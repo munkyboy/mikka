@@ -10,22 +10,22 @@ module Mikka
   def self.await_result(future, options={})
     Akka::Dispatch::Await.result(future, Duration[options[:timeout]])
   end
-  
+
   def self.current_actor=(actor)
     Thread.current[:mikka_current_actor] = actor
   end
-  
+
   def self.current_actor
     Thread.current[:mikka_current_actor]
   end
-  
+
   def self.capture_current_actor(ref)
     self.current_actor = ref
     yield
   ensure
     self.current_actor = nil
   end
-  
+
   ActorRef = Akka::Actor::ActorRef
   Props = Akka::Actor::Props
   Duration = Akka::Util::Duration
@@ -67,11 +67,11 @@ module Mikka
     def post_restart(reason); end
 
     def onReceive(message); receive(message); end
-    def supervisorStrategy; supervisor_strategy; end        
+    def supervisorStrategy; supervisor_strategy; end
     def preStart; super; pre_start; end
     def postStop; super; post_stop; end
-    def preRestart(reason, message_option) 
-      super 
+    def preRestart(reason, message_option)
+      super
       pre_restart(reason, message_option.is_defined ? message_option.get : nil)
     end
     def postRestart(reason); super; post_restart(reason); end
@@ -81,28 +81,28 @@ module Mikka
     def onReceive(*args)
       Mikka.capture_current_actor(get_self) { super }
     end
-    
+
     def preStart(*args)
       Mikka.capture_current_actor(get_self) { super }
     end
-    
+
     def postStop(*args)
       Mikka.capture_current_actor(get_self) { super }
     end
-    
+
     def preRestart(*args)
       Mikka.capture_current_actor(get_self) { super }
     end
-    
+
     def postRestart(*args)
       Mikka.capture_current_actor(get_self) { super }
-    end    
+    end
   end
 
   class Actor < Akka::Actor::UntypedActor
     include RubyesqueActorCallbacks
     include ImplicitSender
-    
+
     class << self
       alias_method :apply, :new
       alias_method :create, :new
@@ -114,14 +114,14 @@ module Mikka
       Props.create(&block)
     end
   end
-  
+
   module Useful
     include PropsConstructor
     extend PropsConstructor
 
     Props = ::Mikka::Props
   end
-  
+
   module SupervisionDecider
     class DeciderAdapter
       include Akka::Japi::Function
@@ -130,25 +130,24 @@ module Mikka
       end
       def apply(e)
         # SupervisorStrategy defines methods :escalate, :stop, :restart, :resume
-        Akka::Actor::SupervisorStrategy.send(@apply_block.call(e))        
+        Akka::Actor::SupervisorStrategy.send(@apply_block.call(e))
       end
-    end    
+    end
   end
 
-  class AllForOneStrategy < Akka::Actor::AllForOneStrategy 
+  class AllForOneStrategy < Akka::Actor::AllForOneStrategy
     # Constructor expects a block taking 1 argument for exception
     # and returning :escalate, :stop, :restart, or :resume
     def initialize(max_number_of_retries, within_time_range, &block)
       super(max_number_of_retries, within_time_range, SupervisionDecider::DeciderAdapter.new(&block))
-    end      
+    end
   end
 
   class OneForOneStrategy < Akka::Actor::OneForOneStrategy
     # Constructor expects a block taking 1 argument for exception
-    # and returning :escalate, :stop, :restart, or :resume    
-    def initialize(max_number_of_retries, within_time_range, &block)            
-      super(max_number_of_retries, within_time_range, SupervisionDecider::DeciderAdapter.new(&block))      
-    end          
-  end    
+    # and returning :escalate, :stop, :restart, or :resume
+    def initialize(max_number_of_retries, within_time_range, &block)
+      super(max_number_of_retries, within_time_range, SupervisionDecider::DeciderAdapter.new(&block))
+    end
+  end
 end
-

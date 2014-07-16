@@ -12,8 +12,8 @@ module Akka
     java_import 'akka.actor.Props'
     java_import 'akka.actor.Terminated'
     java_import 'akka.actor.AllForOneStrategy'
-    java_import 'akka.actor.OneForOneStrategy'   
-    java_import 'akka.actor.SupervisorStrategy'        
+    java_import 'akka.actor.OneForOneStrategy'
+    java_import 'akka.actor.SupervisorStrategy'
   end
 
   module Japi
