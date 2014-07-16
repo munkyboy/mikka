@@ -7,8 +7,8 @@ module Mikka
     Akka::Actor::ActorSystem.create(*args)
   end
 
-  def self.await_result(future, options={})
-    Akka::Dispatch::Await.result(future, Duration[options[:timeout]])
+  def self.await_result(future, timeout = '1s')
+    Akka::Dispatch::Await.result(future, Duration[timeout])
   end
 
   def self.current_actor=(actor)
@@ -56,6 +56,10 @@ module Mikka
   class ActorRef
     def <<(msg)
       tell(msg, Mikka.current_actor)
+    end
+
+    def ask(value, timeout = '1s')
+      Akka::Pattern::Patterns.ask(self, value, Java::AkkaUtil::Timeout.duration_to_timeout(Duration[timeout]))
     end
   end
 

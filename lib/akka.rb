@@ -28,4 +28,8 @@ module Akka
     java_import 'scala.concurrent.duration.Duration'
     java_import 'akka.util.Timeout'
   end
+
+  module Pattern
+    java_import 'akka.pattern.Patterns'
+  end
 end
