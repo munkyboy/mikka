@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require 'lib/akka'
+require 'akka'
 
 module Mikka
   def self.create_actor_system(*args)
