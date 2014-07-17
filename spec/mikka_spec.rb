@@ -64,5 +64,25 @@ module Mikka
         reply.should == :hi
       end
     end
+
+    describe "pipe_to" do
+      let(:reverser_actor) do
+        Class.new(Mikka::Actor) do
+          def receive(msg)
+            sender << self.class.reverse_it(msg)
+          end
+
+          def self.reverse_it(v)
+          end
+        end
+      end
+      let(:reverser) { @system.actor_of(Props[reverser_actor], 'reverser_actor') }
+
+      it "sends to another actor" do
+        reverser_actor.should_receive(:reverse_it).with('pipe').and_return('epipe')
+        @actor.ask('pipe').pipe_to(reverser)
+        sleep 0.2
+      end
+    end
   end
 end

@@ -31,6 +31,7 @@ module Mikka
   Duration = Akka::Util::Duration
   Timeout = Akka::Util::Timeout
   Terminated = Akka::Actor::Terminated
+  Future = Akka::Dispatch::Future
 
   class Props
     def self.[](*args, &block)
@@ -152,6 +153,12 @@ module Mikka
     # and returning :escalate, :stop, :restart, or :resume
     def initialize(max_number_of_retries, within_time_range, &block)
       super(max_number_of_retries, within_time_range, SupervisionDecider::DeciderAdapter.new(&block))
+    end
+  end
+
+  module Future
+    def pipe_to(actor_ref)
+      Akka::Pattern::Patterns.pipe(self, actor_ref.dispatcher).to(actor_ref)
     end
   end
 end
