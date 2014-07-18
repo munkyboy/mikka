@@ -22,7 +22,6 @@ module Akka
 
   module Dispatch
     java_import 'scala.concurrent.Await'
-    java_import 'scala.concurrent.Future'
   end
 
   module Util

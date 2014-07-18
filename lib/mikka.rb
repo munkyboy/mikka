@@ -31,7 +31,6 @@ module Mikka
   Duration = Akka::Util::Duration
   Timeout = Akka::Util::Timeout
   Terminated = Akka::Actor::Terminated
-  Future = Akka::Dispatch::Future
 
   class Props
     def self.[](*args, &block)
@@ -156,9 +155,10 @@ module Mikka
     end
   end
 
-  module Future
+  module FutureMethods
     def pipe_to(actor_ref)
       Akka::Pattern::Patterns.pipe(self, actor_ref.dispatcher).to(actor_ref)
     end
   end
+  Java::ScalaConcurrent::Future.send(:include, FutureMethods)
 end
