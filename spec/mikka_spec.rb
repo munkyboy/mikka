@@ -127,14 +127,12 @@ describe Mikka do
 
     let(:supervisor) do
       Class.new(Mikka::Actor) do
-        def supervisor_strategy
-          Mikka::OneForOneStrategy.new(1, '1s') do |e|
-            case e.exception
-            when ArgumentError then :escalate
-            when IndexError then :stop
-            when NoMethodError then :restart
-            when RangeError then :resume
-            end
+        set_supervisor_strategy(:one_for_one) do |e|
+          case e.exception
+          when ArgumentError then :escalate
+          when IndexError then :stop
+          when NoMethodError then :restart
+          when RangeError then :resume
           end
         end
 

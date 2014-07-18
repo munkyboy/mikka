@@ -113,6 +113,23 @@ module Mikka
       alias_method :apply, :new
       alias_method :create, :new
     end
+
+    def self.set_supervisor_strategy(strategy, opts = {}, &block)
+      max_number_of_retries = opts.fetch(:max_retries, 1)
+      within_time_range = opts.fetch(:within, '1s')
+      klass = case strategy
+      when :all_for_one then AllForOneStrategy
+      when :one_for_one then OneForOneStrategy
+      else
+        if strategy < Java::AkkaActor::SupervisorStrategy
+          strategy
+        else
+          raise 'unknown strategy'
+        end
+      end
+      s = klass.new(max_number_of_retries, within_time_range, &block)
+      define_method(:supervisor_strategy) { s }
+    end
   end
 
   module PropsConstructor
