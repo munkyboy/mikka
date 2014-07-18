@@ -85,4 +85,91 @@ describe Mikka do
       include_examples "sending tests"
     end
   end
+
+  describe 'supervision' do
+    let(:callback_logging_methods) do
+      Module.new do
+        def self.extended(k)
+          k.send(:include, InstanceMethods)
+        end
+
+        module InstanceMethods
+          def post_stop
+            self.class.log_post_stop
+          end
+          def post_restart(reason)
+            self.class.log_post_restart reason.exception
+          end
+        end
+
+        def log_post_stop; end
+        def log_post_restart(e); end
+      end
+    end
+
+    let(:worker) do
+      Class.new(Mikka::Actor) do
+        attr_accessor :stored_value
+        def receive(v)
+          case v
+          when :raise_escalate then raise ArgumentError
+          when :raise_stop then raise IndexError
+          when :raise_restart then raise NoMethodError
+          when :raise_resume then raise RangeError
+          when :get
+            sender << stored_value
+          else
+            self.stored_value = v
+          end
+        end
+      end.extend callback_logging_methods
+    end
+
+    let(:supervisor) do
+      Class.new(Mikka::Actor) do
+        def supervisor_strategy
+          Mikka::OneForOneStrategy.new(1, '1s') do |e|
+            case e.exception
+            when ArgumentError then :escalate
+            when IndexError then :stop
+            when NoMethodError then :restart
+            when RangeError then :resume
+            end
+          end
+        end
+
+        def receive(v)
+          sender << context.actor_of(v, 'worker')
+        end
+      end.extend callback_logging_methods
+    end
+
+    let(:supervisor_ref) { system.actor_of(Mikka::Props[supervisor], 'supervisor') }
+    let(:worker_ref) { Mikka.await_result supervisor_ref.ask(Mikka::Props[worker]) }
+
+    it "handles an escalate policy" do
+      worker_ref << :raise_escalate
+      # escalation will restart the supervisor
+      supervisor.should_receive(:log_post_restart).with(an_instance_of(ArgumentError))
+      sleep 0.5
+    end
+
+    it "handles a stop policy" do
+      worker_ref << :raise_stop
+      worker.should_receive(:log_post_stop)
+      sleep 0.5
+    end
+
+    it "handles a restart policy" do
+      worker_ref << :raise_restart
+      worker.should_receive(:log_post_restart).with(an_instance_of(NoMethodError))
+      sleep 0.5
+    end
+
+    it "handles a resume policy" do
+      worker_ref << 'myval'
+      worker_ref << :raise_resume
+      Mikka.await_result(worker_ref.ask(:get)).should == 'myval'
+    end
+  end
 end

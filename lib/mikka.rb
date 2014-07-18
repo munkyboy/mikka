@@ -145,7 +145,7 @@ module Mikka
     # Constructor expects a block taking 1 argument for exception
     # and returning :escalate, :stop, :restart, or :resume
     def initialize(max_number_of_retries, within_time_range, &block)
-      super(max_number_of_retries, within_time_range, SupervisionDecider::DeciderAdapter.new(&block))
+      super(max_number_of_retries, Duration[within_time_range], SupervisionDecider::DeciderAdapter.new(&block))
     end
   end
 
@@ -153,7 +153,7 @@ module Mikka
     # Constructor expects a block taking 1 argument for exception
     # and returning :escalate, :stop, :restart, or :resume
     def initialize(max_number_of_retries, within_time_range, &block)
-      super(max_number_of_retries, within_time_range, SupervisionDecider::DeciderAdapter.new(&block))
+      super(max_number_of_retries, Duration[within_time_range], SupervisionDecider::DeciderAdapter.new(&block))
     end
   end
 
