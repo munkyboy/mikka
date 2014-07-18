@@ -11,21 +11,6 @@ module Mikka
     Akka::Dispatch::Await.result(future, Duration[timeout])
   end
 
-  def self.current_actor=(actor)
-    Thread.current[:mikka_current_actor] = actor
-  end
-
-  def self.current_actor
-    Thread.current[:mikka_current_actor]
-  end
-
-  def self.capture_current_actor(ref)
-    self.current_actor = ref
-    yield
-  ensure
-    self.current_actor = nil
-  end
-
   ActorRef = Akka::Actor::ActorRef
   Props = Akka::Actor::Props
   Duration = Akka::Util::Duration
@@ -55,7 +40,7 @@ module Mikka
 
   module ActorSendMethods
     def <<(msg)
-      tell(msg, Mikka.current_actor)
+      tell(msg, ImplicitSender.current_actor)
     end
 
     def ask(value, timeout = '1s')
@@ -84,24 +69,27 @@ module Mikka
   end
 
   module ImplicitSender
-    def onReceive(*args)
-      Mikka.capture_current_actor(get_self) { super }
+    class << self
+      def current_actor=(actor)
+        Thread.current[:mikka_current_actor] = actor
+      end
+
+      def current_actor
+        Thread.current[:mikka_current_actor]
+      end
+
+      def capture_current_actor(ref)
+        self.current_actor = ref
+        yield
+      ensure
+        self.current_actor = nil
+      end
     end
 
-    def preStart(*args)
-      Mikka.capture_current_actor(get_self) { super }
-    end
-
-    def postStop(*args)
-      Mikka.capture_current_actor(get_self) { super }
-    end
-
-    def preRestart(*args)
-      Mikka.capture_current_actor(get_self) { super }
-    end
-
-    def postRestart(*args)
-      Mikka.capture_current_actor(get_self) { super }
+    [:onReceive, :preStart, :postStop, :preRestart, :postRestart].each do |meth|
+      define_method(meth) do |*args|
+        ImplicitSender.capture_current_actor(get_self) { super }
+      end
     end
   end
 
