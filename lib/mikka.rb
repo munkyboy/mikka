@@ -32,8 +32,8 @@ module Mikka
   end
 
   class Duration
-    def self.[](*args)
-      Akka::Util::Duration.apply(*args)
+    class << self
+      alias_method :[], :apply
     end
   end
 
