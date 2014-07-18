@@ -39,40 +39,50 @@ describe Mikka do
   end
 
   describe 'message sending' do
-    let(:actor) { system.actor_of(Mikka::Props[test_actor]) }
-
-    describe '#tell/#<<' do
-      it 'sends a message to an actor' do
-        actor << 'hello'
-      end
-    end
-
-    describe '#ask' do
-      it 'sends a message' do
-        future = @actor.ask(:hi)
-        reply = Mikka.await_result(future)
-        reply.should == :hi
-      end
-    end
-
-    describe "pipe_to" do
-      let(:reverser_actor) do
-        Class.new(Mikka::Actor) do
-          def receive(msg)
-            sender << self.class.reverse_it(msg)
-          end
-
-          def self.reverse_it(v)
-          end
+    shared_examples "sending tests" do
+      describe '#tell/#<<' do
+        it 'sends a message to an actor' do
+          actor << 'hello'
         end
       end
-      let(:reverser) { system.actor_of(Mikka::Props[reverser_actor], 'reverser_actor') }
 
-      it "sends to another actor" do
-        reverser_actor.should_receive(:reverse_it).with('pipe').and_return('epipe')
-        actor.ask('pipe').pipe_to(reverser)
-        sleep 0.2
+      describe '#ask' do
+        it 'sends a message' do
+          future = actor.ask(:hi)
+          reply = Mikka.await_result(future)
+          reply.should == :hi
+        end
       end
+
+      describe "pipe_to" do
+        let(:reverser_actor) do
+          Class.new(Mikka::Actor) do
+            def receive(msg)
+              sender << self.class.reverse_it(msg)
+            end
+
+            def self.reverse_it(v)
+            end
+          end
+        end
+        let(:reverser) { system.actor_of(Mikka::Props[reverser_actor], 'reverser_actor') }
+
+        it "sends to another actor" do
+          reverser_actor.should_receive(:reverse_it).with('pipe').and_return('epipe')
+          actor.ask('pipe').pipe_to(reverser)
+          sleep 0.2
+        end
+      end
+    end
+
+    context "using an actorRef" do
+      let(:actor) { system.actor_of(Mikka::Props[test_actor], 'test_actor') }
+      include_examples "sending tests"
+    end
+
+    context "using an actorSelection" do
+      let(:actor) { system.actor_of(Mikka::Props[test_actor], 'test_actor'); system.actor_selection('akka://testsystem/user/test_actor') }
+      include_examples "sending tests"
     end
   end
 end

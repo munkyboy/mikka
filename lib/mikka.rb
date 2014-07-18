@@ -53,7 +53,7 @@ module Mikka
     end
   end
 
-  class ActorRef
+  module ActorSendMethods
     def <<(msg)
       tell(msg, Mikka.current_actor)
     end
@@ -62,6 +62,8 @@ module Mikka
       Akka::Pattern::Patterns.ask(self, value, Java::AkkaUtil::Timeout.duration_to_timeout(Duration[timeout]))
     end
   end
+  ActorRef.send(:include, ActorSendMethods)
+  Akka::Actor::ActorSelection.send(:include, ActorSendMethods)
 
   module RubyesqueActorCallbacks
     def receive(message); end

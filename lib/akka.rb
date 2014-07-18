@@ -6,6 +6,7 @@ require 'akka-actor-jars'
 
 module Akka
   module Actor
+    java_import 'akka.actor.ActorSelection'
     java_import 'akka.actor.ActorSystem'
     java_import 'akka.actor.ActorRef'
     java_import 'akka.actor.UntypedActor'
