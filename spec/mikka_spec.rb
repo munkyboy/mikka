@@ -16,25 +16,25 @@ describe Mikka do
     it 'creates an actor from a class' do
       actor_props = Mikka::Props[test_actor]
       actor = system.actor_of(actor_props, 'some_actor')
-      actor.should be_a(Mikka::ActorRef)
+      actor.should be_a(Akka::Actor::ActorRef)
     end
 
     it 'creates an actor from a factory proc' do
       actor_props = Mikka::Props[:creator => proc { test_actor.new }]
       actor = system.actor_of(actor_props, 'some_actor')
-      actor.should be_a(Mikka::ActorRef)
+      actor.should be_a(Akka::Actor::ActorRef)
     end
 
     it 'creates an actor from a factory block' do
       actor_props = Mikka::Props.create { test_actor.new }
       actor = system.actor_of(actor_props, 'some_actor')
-      actor.should be_a(Mikka::ActorRef)
+      actor.should be_a(Akka::Actor::ActorRef)
     end
 
     it 'creates an actor from a factory block passed to the Mikka::Props function' do
       actor_props = Mikka::Useful.Props { test_actor.new }
       actor = system.actor_of(actor_props, 'some_actor')
-      actor.should be_a(Mikka::ActorRef)
+      actor.should be_a(Akka::Actor::ActorRef)
     end
   end
 

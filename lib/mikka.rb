@@ -11,7 +11,6 @@ module Mikka
     Akka::Dispatch::Await.result(future, Duration[timeout])
   end
 
-  ActorRef = Akka::Actor::ActorRef
   Props = Akka::Actor::Props
   Duration = Akka::Util::Duration
   Timeout = Akka::Util::Timeout
@@ -47,7 +46,7 @@ module Mikka
       Akka::Pattern::Patterns.ask(self, value, Java::AkkaUtil::Timeout.duration_to_timeout(Duration[timeout]))
     end
   end
-  ActorRef.send(:include, ActorSendMethods)
+  Akka::Actor::ActorRef.send(:include, ActorSendMethods)
   Akka::Actor::ActorSelection.send(:include, ActorSendMethods)
 
   module RubyesqueActorCallbacks
