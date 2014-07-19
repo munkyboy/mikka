@@ -170,4 +170,16 @@ describe Mikka do
       Mikka.await_result(worker_ref.ask(:get)).should == 'myval'
     end
   end
+
+  describe 'routing helpers' do
+    it "creates a round robin router with specified number of instances" do
+      pending("need to figure out how best to test number of routees")
+      system.actor_of(Mikka::Props[test_actor].with_round_robin_router(2))
+    end
+
+    it "creates a smallest mailbox router with specified number of instances" do
+      pending("need to figure out how best to test number of routees")
+      system.actor_of(Mikka::Props[test_actor].with_smallest_mailbox_router(3))
+    end
+  end
 end

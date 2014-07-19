@@ -15,6 +15,20 @@ module Mikka
   Duration = Akka::Util::Duration
   Timeout = Akka::Util::Timeout
   Terminated = Akka::Actor::Terminated
+  Broadcast = Akka::Routing::Broadcast
+  PoisonPill = Java::AkkaActor::PoisonPill.get_instance
+
+  module PropsRoutingMethods
+    %w{round_robin_router random_router smallest_mailbox_router broadcast_router scatter_gather_first_completed_router consistent_hashing_router}.each do |meth|
+      klass = Java::AkkaRouting.const_get meth.split('_').collect(&:capitalize).join
+      define_method(:"with_#{meth}") do |*args|
+        with_router(klass.new(*args))
+      end
+    end
+    define_method(:"with_configured_router") do |*args|
+      with_router(Java::AkkaRouting::FromConfig.new)
+    end
+  end
 
   class Props
     def self.[](*args, &block)
@@ -29,6 +43,8 @@ module Mikka
     class << self
       alias_method :create, :[]
     end
+
+    include PropsRoutingMethods
   end
 
   class Duration
@@ -48,6 +64,13 @@ module Mikka
   end
   Akka::Actor::ActorRef.send(:include, ActorSendMethods)
   Akka::Actor::ActorSelection.send(:include, ActorSendMethods)
+
+  module RouterSendMethods
+    def broadcast(v)
+      self.<< Java::AkkaRouting::Broadcast.new(v)
+    end
+  end
+  Java::AkkaRouting::RoutedActorRef.send(:include, RouterSendMethods)
 
   module RubyesqueActorCallbacks
     def receive(message); end

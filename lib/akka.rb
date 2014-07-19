@@ -25,6 +25,10 @@ module Akka
     java_import 'scala.concurrent.Await'
   end
 
+  module Routing
+    java_import 'akka.routing.Broadcast'
+  end
+  
   module Util
     java_import 'scala.concurrent.duration.Duration'
     java_import 'akka.util.Timeout'
