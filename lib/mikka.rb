@@ -61,6 +61,10 @@ module Mikka
     def ask(value, timeout = '1s')
       Akka::Pattern::Patterns.ask(self, value, Java::AkkaUtil::Timeout.duration_to_timeout(Duration[timeout]))
     end
+
+    def ask_and_wait(value, timeout = '1s')
+      Mikka.await_result(ask(value, timeout), timeout)
+    end
   end
   Akka::Actor::ActorRef.send(:include, ActorSendMethods)
   Akka::Actor::ActorSelection.send(:include, ActorSendMethods)

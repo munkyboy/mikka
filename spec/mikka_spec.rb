@@ -54,6 +54,12 @@ describe Mikka do
         end
       end
 
+      describe '#ask_and_wait' do
+        it 'sends a message then waits' do
+          expect(actor.ask_and_wait(:hi)).to eq :hi
+        end
+      end
+
       describe "pipe_to" do
         let(:reverser_actor) do
           Class.new(Mikka::Actor) do
