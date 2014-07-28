@@ -30,18 +30,23 @@ module Mikka
     end
   end
 
-  class Props
-    def self.[](*args, &block)
-      options = args.last.is_a?(Hash) && args.pop
-      creator = ((args.first.is_a?(Proc) || args.first.is_a?(Class)) && args.first) || (options && options[:creator]) || block
-      raise ArgumentError, %(No creator specified) unless creator
-      props = new
-      props = props.with_creator(creator)
-      props
+  class Creator
+    include Java::AkkaJapi::Creator
+    def initialize(klass, *args)
+      @klass = klass
+      @args = args
     end
 
+    def create
+      @klass.new(*@args)
+    end
+  end
+
+  class Props
     class << self
-      alias_method :create, :[]
+      def [](klass, *args)
+        apply Mikka::Creator.new(klass, *args)
+      end
     end
 
     include PropsRoutingMethods

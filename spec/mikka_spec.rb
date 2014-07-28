@@ -3,6 +3,12 @@ require_relative 'spec_helper'
 describe Mikka do
   let(:test_actor) do
     Class.new(Mikka::Actor) do
+      def self.initial_value_set(*args); end
+      def initialize(*args)
+        self.class.initial_value_set(*args) unless args.empty?
+        super()
+      end
+
       def receive(msg)
         sender << msg
       end
@@ -19,22 +25,12 @@ describe Mikka do
       actor.should be_a(Akka::Actor::ActorRef)
     end
 
-    it 'creates an actor from a factory proc' do
-      actor_props = Mikka::Props[:creator => proc { test_actor.new }]
+    it 'passes arguments to the actor contructor' do
+      test_actor.should_receive(:initial_value_set).with(:a, 1)
+      actor_props = Mikka::Props[test_actor, :a, 1]
       actor = system.actor_of(actor_props, 'some_actor')
       actor.should be_a(Akka::Actor::ActorRef)
-    end
-
-    it 'creates an actor from a factory block' do
-      actor_props = Mikka::Props.create { test_actor.new }
-      actor = system.actor_of(actor_props, 'some_actor')
-      actor.should be_a(Akka::Actor::ActorRef)
-    end
-
-    it 'creates an actor from a factory block passed to the Mikka::Props function' do
-      actor_props = Mikka::Useful.Props { test_actor.new }
-      actor = system.actor_of(actor_props, 'some_actor')
-      actor.should be_a(Akka::Actor::ActorRef)
+      sleep 0.2
     end
   end
 
