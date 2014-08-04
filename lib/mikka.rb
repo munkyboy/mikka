@@ -78,8 +78,14 @@ module Mikka
     def broadcast(v)
       self.<< Java::AkkaRouting::Broadcast.new(v)
     end
+
+    def current_routees
+      routees = self.ask_and_wait(Java::AkkaRouting::CurrentRoutees.get_instance).routees
+      Java::ScalaCollection::JavaConversions.asJavaIterable(routees).to_a
+    end
   end
   Java::AkkaRouting::RoutedActorRef.send(:include, RouterSendMethods)
+  Akka::Actor::ActorSelection.send(:include, RouterSendMethods)
 
   module RubyesqueActorCallbacks
     def receive(message); end

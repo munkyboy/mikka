@@ -184,4 +184,27 @@ describe Mikka do
       system.actor_of(Mikka::Props[test_actor].with_smallest_mailbox_router(3))
     end
   end
+
+  describe "routed actor helpers" do
+    shared_examples "helper tests" do
+      describe "#current_routees" do
+        it "returns list of routees" do
+          expect(subject.current_routees).to have_exactly(2).items
+          expect(subject.current_routees.first).to be_a Akka::Actor::ActorRef
+        end
+      end
+    end
+
+    let!(:actor_ref) { system.actor_of(Mikka::Props[test_actor].with_round_robin_router(2), 'routed') }
+
+    context "with a routed actor ref" do
+      subject { actor_ref }
+      include_examples "helper tests"
+    end
+
+    context "with an actor selection" do
+      subject { system.actor_selection('akka://testsystem/user/routed') }
+      include_examples "helper tests"
+    end
+  end
 end
